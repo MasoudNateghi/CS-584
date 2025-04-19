@@ -165,6 +165,7 @@ cython_debug/
 papers/
 books/
 slides/
+project/codes/misc/
 
 # files
 demo*
