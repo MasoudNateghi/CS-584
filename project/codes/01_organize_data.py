@@ -1,10 +1,8 @@
 import pickle as pkl
 from collections import Counter
-from utils.variables import dataset_path
-from utils.dhandle import extract_dataset, find_paths
+from utils.dhandle import load_data
 
-paths = find_paths(dataset_path)
-records, labels = extract_dataset(paths)
+records, labels = load_data()
 freq = Counter(labels)
 print(freq)
 # {'Myocardial infarction': 368, 'Healthy control': 80, 'n/a': 27, 'Cardiomyopathy': 17, ...}
