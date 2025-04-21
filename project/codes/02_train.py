@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pickle as pkl
 
@@ -6,9 +7,10 @@ import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.data import Data, DataLoader
 from torch_geometric.nn import GCNConv, global_mean_pool
+
+from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 
 # load the filtered records and labels
 with open("misc/dataset/filtered_data.pkl", "rb") as f:
@@ -34,7 +36,6 @@ graph_list = [create_subject_graph(sig, lbl) for sig, lbl in zip(ecg_signals, la
 train_graphs, val_graphs = train_test_split(graph_list, test_size=0.2, random_state=42)
 train_loader = DataLoader(train_graphs, batch_size=1, shuffle=True)  # Batch size = 1 because lengths vary
 val_loader = DataLoader(val_graphs, batch_size=1)
-
 
 #%% Model Definition
 class LeadCNN(nn.Module):
@@ -82,6 +83,8 @@ criterion = nn.CrossEntropyLoss()
 def train(model, loader):
     model.train()
     total_loss = 0
+    all_preds, all_labels = [], []
+
     for batch in loader:
         batch = batch.to(device)
         optimizer.zero_grad()
@@ -90,31 +93,76 @@ def train(model, loader):
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
-    return total_loss / len(loader)
+
+        preds = out.argmax(dim=1)
+        all_preds.extend(preds.cpu().numpy())
+        all_labels.extend(batch.y.cpu().numpy())
+
+    avg_loss = total_loss / len(loader)
+    accuracy = accuracy_score(all_labels, all_preds)
+    return avg_loss, accuracy
+
 
 def evaluate(model, loader):
     model.eval()
+    total_loss = 0
     all_preds, all_labels = [], []
+
     with torch.no_grad():
         for batch in loader:
             batch = batch.to(device)
             out = model(batch)
+            loss = criterion(out, batch.y)
+            total_loss += loss.item()
+
             preds = out.argmax(dim=1)
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(batch.y.cpu().numpy())
-    return accuracy_score(all_labels, all_preds)
+
+    avg_loss = total_loss / len(loader)
+    accuracy = accuracy_score(all_labels, all_preds)
+    return avg_loss, accuracy
+
 
 #%% Training script
-best_val_acc = 0.0
-best_model_path = "models/CNNGCN/best_model.pth"
+train_loss_history = []
+train_acc_history = []
+val_loss_history = []
+val_acc_history = []
 
-num_epochs = 100
-for epoch in range(0, num_epochs):
-    train_loss = train(model, train_loader)
-    val_acc = evaluate(model, val_loader)
+best_val_acc = 0.0
+os.makedirs('misc/models/CNNGCN', exist_ok=True)
+best_model_path = "misc/models/CNNGCN/best_model.pth"
+
+for epoch in range(1, 21):
+    train_loss, train_acc = train(model, train_loader)
+    val_loss, val_acc = evaluate(model, val_loader)
+
+    train_loss_history.append(train_loss)
+    train_acc_history.append(train_acc)
+    val_loss_history.append(val_loss)
+    val_acc_history.append(val_acc)
+
+    # Save best model
     if val_acc > best_val_acc:
         best_val_acc = val_acc
         torch.save(model.state_dict(), best_model_path)
-        print(f"Epoch {epoch:02d} | Train Loss: {train_loss:.4f} | Val Acc: {val_acc:.4f} [BEST SAVED]")
+        best_flag = "✅ BEST"
     else:
-        print(f"Epoch {epoch:02d} | Train Loss: {train_loss:.4f} | Val Acc: {val_acc:.4f}")
+        best_flag = ""
+
+    # Print nicely
+    print(
+        f"Epoch {epoch:02d} | "
+        f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f} | "
+        f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f} {best_flag}"
+    )
+
+# Save metrics
+with open("misc/models/CNNGCN/metrics.pkl", "wb") as f:
+    pkl.dump({
+        'train_loss': train_loss_history,
+        'train_acc': train_acc_history,
+        'val_loss': val_loss_history,
+        'val_acc': val_acc_history
+    }, f)
