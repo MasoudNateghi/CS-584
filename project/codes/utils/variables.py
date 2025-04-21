@@ -3,7 +3,7 @@
 import os
 
 # paths and directories
-run_local = True
+run_local = False
 if run_local:
     dataset_path = "/Users/masoud/Documents/Education/Alphanumerics Lab/Projects/data/physionet.org/files/ptbdb/1.0.0"
 else:
