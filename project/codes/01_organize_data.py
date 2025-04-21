@@ -8,7 +8,7 @@ print(freq)
 # {'Myocardial infarction': 368, 'Healthy control': 80, 'n/a': 27, 'Cardiomyopathy': 17, ...}
 
 # Only keep records with specific labels
-target_conditions = {'Myocardial infarction', 'Healthy Control'}
+target_conditions = ['Myocardial infarction', 'Healthy control']
 filtered_records = []
 filtered_labels = []
 
