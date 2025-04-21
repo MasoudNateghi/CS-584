@@ -105,8 +105,16 @@ def evaluate(model, loader):
     return accuracy_score(all_labels, all_preds)
 
 #%% Training script
+best_val_acc = 0.0
+best_model_path = "models/CNNGCN/best_model.pth"
+
 num_epochs = 100
 for epoch in range(0, num_epochs):
     train_loss = train(model, train_loader)
     val_acc = evaluate(model, val_loader)
-    print(f"Epoch {epoch:02d} | Train Loss: {train_loss:.4f} | Val Acc: {val_acc:.4f}")
+    if val_acc > best_val_acc:
+        best_val_acc = val_acc
+        torch.save(model.state_dict(), best_model_path)
+        print(f"Epoch {epoch:02d} | Train Loss: {train_loss:.4f} | Val Acc: {val_acc:.4f} [BEST SAVED]")
+    else:
+        print(f"Epoch {epoch:02d} | Train Loss: {train_loss:.4f} | Val Acc: {val_acc:.4f}")
