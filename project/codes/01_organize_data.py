@@ -8,18 +8,18 @@ print(freq)
 # {'Myocardial infarction': 368, 'Healthy control': 80, 'n/a': 27, 'Cardiomyopathy': 17, ...}
 
 # Only keep records with specific labels
-target_conditions = ['Myocardial infarction', 'Healthy control']
-filtered_records = []
 filtered_labels = []
 
 for label, record in zip(labels, records):
-    if label in target_conditions:
-        filtered_records.append(record)
+    if label == 'Myocardial infarction':
         filtered_labels.append(label)
+    else:
+        filtered_labels.append('Other')
+
 
 # Save the filtered records and labels
 with open("misc/dataset/filtered_data.pkl", "wb") as f:
-    pkl.dump((filtered_records, filtered_labels), f)
+    pkl.dump((records, filtered_labels), f)
 
 # # Load the filtered records and labels
 # with open("misc/dataset/filtered_data.pkl", "rb") as f:
