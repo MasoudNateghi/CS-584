@@ -76,7 +76,7 @@ class HybridECGGNN(nn.Module):
 #%% Model Initialization
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = HybridECGGNN(cnn_output_dim=64, gnn_hidden_dim=64, num_classes=2).to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-2)
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
 criterion = nn.CrossEntropyLoss()
 
 #%% Training and Evaluation
@@ -134,7 +134,9 @@ best_val_acc = 0.0
 os.makedirs('misc/models/CNNGCN', exist_ok=True)
 best_model_path = "misc/models/CNNGCN/best_model.pth"
 
-for epoch in range(1, 21):
+num_epochs = 100
+
+for epoch in range(0, num_epochs):
     train_loss, train_acc = train(model, train_loader)
     val_loss, val_acc = evaluate(model, val_loader)
 
@@ -153,7 +155,7 @@ for epoch in range(1, 21):
 
     # Print nicely
     print(
-        f"Epoch {epoch:02d} | "
+        f"Epoch {epoch+1:02d} | "
         f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f} | "
         f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f} {best_flag}"
     )
