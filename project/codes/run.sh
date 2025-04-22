@@ -13,3 +13,5 @@ echo "Running data preprocessing script..."
 python 01_organize_data.py
 echo "Running training script..."
 python 02_train.py
+echo "Running plotting script..."
+python 03_plot_metrics.py
