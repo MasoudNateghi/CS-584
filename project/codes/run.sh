@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=CellTrack
+#SBATCH --job-name=ECGGCN
 #SBATCH --output=log_%j.txt
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
