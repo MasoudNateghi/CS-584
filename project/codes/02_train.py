@@ -31,7 +31,8 @@ def create_subject_graph(signal: np.ndarray, label_str: str) -> Data:
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     return Data(x=torch.tensor(signal, dtype=torch.float), edge_index=edge_index, y=y)
 
-graph_list = [create_subject_graph(sig, lbl) for sig, lbl in zip(ecg_signals, labels)]
+# graph_list = [create_subject_graph(sig, lbl) for sig, lbl in zip(ecg_signals, labels)]
+graph_list = [create_subject_graph(normalize_signal(sig), lbl) for sig, lbl in zip(ecg_signals, labels)]
 
 train_graphs, val_graphs = train_test_split(graph_list, test_size=0.2, random_state=42)
 train_loader = DataLoader(train_graphs, batch_size=1, shuffle=True)  # Batch size = 1 because lengths vary
@@ -134,7 +135,7 @@ best_val_acc = 0.0
 os.makedirs('misc/models/CNNGCN', exist_ok=True)
 best_model_path = "misc/models/CNNGCN/best_model.pth"
 
-num_epochs = 100
+num_epochs = 200
 
 for epoch in range(0, num_epochs):
     train_loss, train_acc = train(model, train_loader)
