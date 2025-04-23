@@ -13,8 +13,9 @@ from sklearn.model_selection import train_test_split
 
 from utils.CGNN import ECGCGNN
 from utils.RGNN import ECGRGNN
+from utils.attCGNN import ECGattCGNN
 
-model_type = 'RGNN'  # 'CGNN' or 'RGNN'
+model_type = 'attCGNN'  # 'CGNN' or 'RGNN', 'attCGNN'
 model_dir = f'misc/models/{model_type}'
 os.makedirs(model_dir, exist_ok=True)
 
@@ -51,6 +52,8 @@ if model_type == 'CGNN':
     model = ECGCGNN(cnn_output_dim=64, gnn_hidden_dim=64, num_classes=2).to(device)
 elif model_type == 'RGNN':
     model = ECGRGNN(rnn_output_dim=64, gnn_hidden_dim=64, num_classes=2).to(device)
+elif model_type == 'attCGNN':
+    model = ECGattCGNN(cnn_output_dim=64, gnn_hidden_dim=64, num_classes=2, num_heads=4).to(device)
 else:
     raise ValueError("Invalid model type. Choose 'CGNN' or 'RGNN'.")
 
@@ -58,14 +61,15 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 criterion = nn.CrossEntropyLoss()
 
 #%% Training and Evaluation
-def train(model, loader):
+def train(model, loader, verbose=False):
     model.train()
     total_loss = 0
     all_preds, all_labels = [], []
 
     for i, batch in enumerate(loader):
-        if i % 10 == 0:
-            print(f"Training batch {i}/{len(loader)}")
+        if verbose:
+            if i % 10 == 0:
+                print(f"Training batch {i}/{len(loader)}")
         batch = batch.to(device)
         optimizer.zero_grad()
         out = model(batch)
@@ -113,7 +117,7 @@ val_acc_history = []
 best_val_acc = 0.0
 best_model_path = f'{model_dir}/best_model.pth'
 
-num_epochs = 50
+num_epochs = 200
 
 for epoch in range(0, num_epochs):
     train_loss, train_acc = train(model, train_loader)
