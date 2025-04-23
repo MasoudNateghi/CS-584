@@ -3,7 +3,9 @@ import numpy as np
 import pickle as pkl
 import matplotlib.pyplot as plt
 
-metrics_path = "misc/models/CNNGCN/metrics.pkl"
+model_type = 'RGNN'  # 'CGNN' or 'RGNN'
+model_dir = f'misc/models/{model_type}'
+metrics_path = f'{model_dir}/metrics.pkl'
 with open(metrics_path, "rb") as f:
     metrics = pkl.load(f)
 train_loss = metrics["train_loss"]
