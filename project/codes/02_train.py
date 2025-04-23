@@ -140,7 +140,7 @@ for epoch in range(0, num_epochs):
     )
 
 # Save metrics
-with open("misc/models/CNNGCN/metrics.pkl", "wb") as f:
+with open(f'{model_dir}/metrics.pkl', "wb") as f:
     pkl.dump({
         'train_loss': train_loss_history,
         'train_acc': train_acc_history,
