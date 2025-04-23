@@ -13,7 +13,7 @@ train_acc = metrics["train_acc"]
 val_loss = metrics["val_loss"]
 val_acc = metrics["val_acc"]
 
-result_path = "misc/results/CNNGCN"
+result_path = f'misc/results/{model_type}'
 os.makedirs(result_path, exist_ok=True)
 
 plt.figure()
