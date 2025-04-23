@@ -6,13 +6,19 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.data import Data, DataLoader
-from torch_geometric.nn import GCNConv, global_mean_pool
 
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
-# load the filtered records and labels
+from utils.CGNN import ECGCGNN
+from utils.RGNN import ECGRGNN
+
+model_type = 'RGNN'  # 'CGNN' or 'RGNN'
+model_dir = f'misc/models/{model_type}'
+os.makedirs(model_dir, exist_ok=True)
+
+#%% load data
 with open("misc/dataset/filtered_data.pkl", "rb") as f:
     ecg_signals, labels = pkl.load(f)
 
@@ -38,45 +44,16 @@ train_graphs, val_graphs = train_test_split(graph_list, test_size=0.2, random_st
 train_loader = DataLoader(train_graphs, batch_size=1, shuffle=True)  # Batch size = 1 because lengths vary
 val_loader = DataLoader(val_graphs, batch_size=1)
 
-#%% Model Definition
-class LeadCNN(nn.Module):
-    def __init__(self, output_dim):
-        super(LeadCNN, self).__init__()
-        self.encoder = nn.Sequential(
-            nn.Conv1d(1, 16, kernel_size=7, stride=2, padding=3),
-            nn.ReLU(),
-            nn.Conv1d(16, 32, kernel_size=5, stride=2, padding=2),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool1d(1),
-        )
-        self.linear = nn.Linear(32, output_dim)
-
-    def forward(self, lead_signals):
-        # lead_signals: [15, signal_length]
-        x = lead_signals.unsqueeze(1)  # [15, 1, signal_length]
-        x = self.encoder(x).squeeze(-1)  # [15, 32]
-        x = self.linear(x)  # [15, output_dim]
-        return x
-
-class HybridECGGNN(nn.Module):
-    def __init__(self, cnn_output_dim, gnn_hidden_dim, num_classes):
-        super(HybridECGGNN, self).__init__()
-        self.lead_encoder = LeadCNN(output_dim=cnn_output_dim)
-        self.gnn1 = GCNConv(cnn_output_dim, gnn_hidden_dim)
-        self.gnn2 = GCNConv(gnn_hidden_dim, gnn_hidden_dim)
-        self.fc = nn.Linear(gnn_hidden_dim, num_classes)
-
-    def forward(self, data):
-        x_raw, edge_index, batch = data.x, data.edge_index, data.batch
-        x_encoded = self.lead_encoder(x_raw)  # [15, cnn_output_dim]
-        x = torch.relu(self.gnn1(x_encoded, edge_index))
-        x = torch.relu(self.gnn2(x, edge_index))
-        x = global_mean_pool(x, batch)
-        return self.fc(x)
-
 #%% Model Initialization
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = HybridECGGNN(cnn_output_dim=64, gnn_hidden_dim=64, num_classes=2).to(device)
+
+if model_type == 'CGNN':
+    model = ECGCGNN(cnn_output_dim=64, gnn_hidden_dim=64, num_classes=2).to(device)
+elif model_type == 'RGNN':
+    model = ECGRGNN(rnn_output_dim=64, gnn_hidden_dim=64, num_classes=2).to(device)
+else:
+    raise ValueError("Invalid model type. Choose 'CGNN' or 'RGNN'.")
+
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 criterion = nn.CrossEntropyLoss()
 
@@ -86,7 +63,9 @@ def train(model, loader):
     total_loss = 0
     all_preds, all_labels = [], []
 
-    for batch in loader:
+    for i, batch in enumerate(loader):
+        if i % 10 == 0:
+            print(f"Training batch {i}/{len(loader)}")
         batch = batch.to(device)
         optimizer.zero_grad()
         out = model(batch)
@@ -132,10 +111,9 @@ val_loss_history = []
 val_acc_history = []
 
 best_val_acc = 0.0
-os.makedirs('misc/models/CNNGCN', exist_ok=True)
-best_model_path = "misc/models/CNNGCN/best_model.pth"
+best_model_path = f'{model_dir}/best_model.pth'
 
-num_epochs = 200
+num_epochs = 50
 
 for epoch in range(0, num_epochs):
     train_loss, train_acc = train(model, train_loader)
