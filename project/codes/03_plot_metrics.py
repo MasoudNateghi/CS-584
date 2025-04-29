@@ -2,8 +2,8 @@ import os
 import numpy as np
 import pickle as pkl
 import matplotlib.pyplot as plt
+from utils.variables import model_type
 
-model_type = 'RGNN'  # 'CGNN' or 'RGNN'
 model_dir = f'misc/models/{model_type}'
 metrics_path = f'{model_dir}/metrics.pkl'
 with open(metrics_path, "rb") as f:

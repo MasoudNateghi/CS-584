@@ -9,9 +9,9 @@ from sklearn.preprocessing import LabelEncoder
 from utils.CGNN import ECGCGNN
 from utils.RGNN import ECGRGNN
 from utils.attCGNN import ECGattCGNN
+from utils.variables import model_type
 
 # Settings
-model_type = 'CGNN'  # 'CGNN' or 'RGNN' or 'attCGNN'
 model_path = f'misc/models/{model_type}/best_model.pth'
 
 # Device

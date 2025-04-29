@@ -14,8 +14,8 @@ from sklearn.model_selection import train_test_split
 from utils.CGNN import ECGCGNN
 from utils.RGNN import ECGRGNN
 from utils.attCGNN import ECGattCGNN
+from utils.variables import model_type
 
-model_type = 'attCGNN'  # 'CGNN' or 'RGNN', 'attCGNN'
 model_dir = f'misc/models/{model_type}'
 os.makedirs(model_dir, exist_ok=True)
 

@@ -17,3 +17,5 @@ os.makedirs("misc/dataset", exist_ok=True)
 fs_old = 1000  # Sampling frequency
 fc = 0.5  # Cut-off frequency
 fs = 360  # New sampling frequency
+
+model_type = 'attCGNN'  # 'CGNN' or 'RGNN', 'attCGNN'

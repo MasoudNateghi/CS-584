@@ -15,4 +15,6 @@ echo "Running training script..."
 python 02_train.py
 echo "Running plotting script..."
 python 03_plot_metrics.py
+echo "Running evaluation script..."
+python 04_evaluate_model.py
 echo "Finished running all scripts."
